@@ -4,9 +4,15 @@ Changes - List of significant changes to Apache::Status::DBI
     
 As of $Date: 2007-03-23 13:48:54 +0000 (Fri, 23 Mar 2007) $
 
-$Revision: 9324 $
+$Revision: 9803 $
     
-=head2 Changes in Apache::Status::DBI 1.0.0 (svn rev 9324),  24th March 2007
+=head2 Changes in 1.011 (svn rev 9802),  26th July 2007
+
+  Add mod_perl2 support, thanks to Philip M. Gollucci
+  Improve err formatting to show Info and Warn states
+  Remove need for version module.
+
+=head2 Changes in 1.00 (svn rev 9324),  24th March 2007
 
   Initial release.
 

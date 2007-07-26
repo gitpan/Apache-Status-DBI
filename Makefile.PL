@@ -11,7 +11,6 @@ WriteMakefile(
     PREREQ_PM => {
         'Test::More' => 0,
         'DBI' => 1.49,
-        'version'    => 0,
         # + Apache::Status or Apache2::Status
     },
     dist  => {

@@ -4,20 +4,25 @@ use warnings;
 use strict;
 use Carp;
 
-use version; our $VERSION = qv('1.0.0'); # $Id: DBI.pm 9323 2007-03-24 22:16:33Z timbo $
+our $VERSION = '1.011'; # $Id: DBI.pm 9372 2007-03-30 22:59:19Z timbo $
 
-use DBI;
+use DBI ();
 
 use constant MP2 => ( exists $ENV{MOD_PERL_API_VERSION} and $ENV{MOD_PERL_API_VERSION} >= 2 );
-BEGIN {
-  if (MP2) {
-      warn "NOT TESTED WITH mod_perl2 YET - patched welcome";
-  }
-  else {
-  }
-}
 
-use Apache::Util qw(escape_html);
+BEGIN {
+    if (MP2) {
+        require mod_perl2;
+        require Apache2::Module;
+        require Apache2::Util;
+        Apache2::Util->import(qw(escape_html));
+    }
+    else {
+        require Apache;
+        require Apache::Util;
+        Apache::Util->import(qw(escape_html));
+    }
+}
 
 my %apache_status_menu_items = (
     DBI_handles => [ 'DBI Handles', \&apache_status_dbi_handles ],
@@ -38,7 +43,18 @@ if ($apache_status_class) {
 }
 
 
+=pod
 
+=over 1
+
+=item B<apache_status_dbi_handles>
+
+Displays all handles and associated information via the Apache::Status
+webpages in a running httpd mod_perl enabled server.
+
+=back
+
+=cut
 sub apache_status_dbi_handles {
     my($r, $q) = @_;
     my @s = ("<pre>",
@@ -59,8 +75,8 @@ sub apache_status_dbi_handles {
         push @s, _apache_status_dbi_handle($_, 1) for @children;
     }
     
-    push @s, "<hr>\n";
-    push @s, __PACKAGE__." ".$VERSION;
+    push @s, "<hr>";
+    push @s, "<font size=-2 color=grey>".__PACKAGE__." $VERSION</font>";
     push @s, "</pre>\n";
     return \@s;
 }
@@ -110,8 +126,11 @@ sub _apache_status_dbi_handle {
         if @scalar_attr2;
     push @s, sprintf "%sRows: %s\n", $pad, $h->rows
         if $type eq 'st' || $h->rows != -1;
-    push @s, sprintf "%sError: %s %s\n", $pad,
-        $h->err, escape_html($h->errstr) if $h->err;
+    if (defined( my $err = $h->err )) {
+        push @s, sprintf "%s%s %s %s\n", $pad,
+            ($err ? "Error" : length($err) ? "Warning" : "Information"),
+            $err, escape_html($h->errstr);
+    }
     push @s, sprintf "    sth: %d (%d cached, %d active)\n",
         scalar @children, scalar keys %{$h->{CachedKids}||{}}, $h->{ActiveKids}
         if @children;
@@ -132,7 +151,7 @@ Apache::Status::DBI - Show status of all DBI database and statement handles
 
 =head1 VERSION
 
-This document describes Apache::Status::DBI $Id: DBI.pm 9323 2007-03-24 22:16:33Z timbo $
+This document describes Apache::Status::DBI $Id: DBI.pm 9372 2007-03-30 22:59:19Z timbo $
 
 
 =head1 SYNOPSIS
@@ -155,10 +174,6 @@ The Apache::Status module must be loaded before Apache::Status::DBI.
 =head1 DEPENDENCIES
 
 DBI and Apache::Status
-
-=head1 INCOMPATIBILITIES
-
-Probably needs some trivial tweaking to work with mod_perl2.
 
 =head1 BUGS AND LIMITATIONS
 

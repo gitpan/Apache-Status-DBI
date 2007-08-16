@@ -4,18 +4,27 @@ use warnings;
 use strict;
 use Carp;
 
-our $VERSION = '1.011'; # $Id: DBI.pm 9372 2007-03-30 22:59:19Z timbo $
+our $VERSION = '1.012'; # $Id: DBI.pm 9845 2007-08-16 14:13:30Z timbo $
 
 use DBI ();
 
-use constant MP2 => ( exists $ENV{MOD_PERL_API_VERSION} and $ENV{MOD_PERL_API_VERSION} >= 2 );
+# if MOD_PERL_API_VERSION env var exists then use it to determine mod_perl v1 or v2
+# if not, then assume mod_perl v2 if we can load mod_perl2 module
+use constant MP2 => (exists $ENV{MOD_PERL_API_VERSION})
+        ? ($ENV{MOD_PERL_API_VERSION} >= 2)
+        : eval { require mod_perl2 };
 
 BEGIN {
     if (MP2) {
         require mod_perl2;
         require Apache2::Module;
-        require Apache2::Util;
-        Apache2::Util->import(qw(escape_html));
+        *escape_html = sub {
+            my $s = shift;
+            $s =~ s/&/&amp;/g;
+            $s =~ s/</&lt;/g;
+            $s =~ s/>/&gt;/g;
+            return $s;
+        }
     }
     else {
         require Apache;
@@ -151,7 +160,7 @@ Apache::Status::DBI - Show status of all DBI database and statement handles
 
 =head1 VERSION
 
-This document describes Apache::Status::DBI $Id: DBI.pm 9372 2007-03-30 22:59:19Z timbo $
+This document describes Apache::Status::DBI $Id: DBI.pm 9845 2007-08-16 14:13:30Z timbo $
 
 
 =head1 SYNOPSIS
